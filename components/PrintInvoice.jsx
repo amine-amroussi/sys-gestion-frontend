@@ -82,12 +82,12 @@ const PrintInvoice = forwardRef(({ formData, tripDetails, products, boxes, emplo
             <thead>
               <tr>
                 <th>Désignation</th>
-                <th>Prix (MAD)</th>
                 <th>Qté Caisses (Restant)</th>
                 <th>Qté Unités (Restant)</th>
                 <th>Qté Caisses (Nouveau)</th>
                 <th>Qté Unités (Nouveau)</th>
                 <th>Quantité Totale (Unités)</th>
+                <th>Prix (MAD)</th>
                 <th>Prix Total (MAD)</th>
               </tr>
             </thead>
@@ -113,12 +113,12 @@ const PrintInvoice = forwardRef(({ formData, tripDetails, products, boxes, emplo
                         return `
                           <tr>
                             <td>${productData.designation || "N/A"}</td>
-                            <td>${parseInt(productData.priceUnite).toFixed(2)}</td>
                             <td>${product.qttOut || 0}</td>
                             <td>${product.qttOutUnite || 0}</td>
                             <td>${product.newQttOut || 0}</td>
                             <td>${product.newQttOutUnite || 0}</td>
                             <td>${totalUnits}</td>
+                            <td>${parseInt(productData.priceUnite).toFixed(2)}</td>
                             <td>${itemTotal.toFixed(2)}</td>
                           </tr>
                         `;

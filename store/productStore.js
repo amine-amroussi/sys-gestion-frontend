@@ -9,6 +9,7 @@ export const useProduct = create((set, get) => ({
     selectedProducts: [],
     selectedProduct: "",
     loadingProduct: false,
+    allProducts : [],
     pagination: {
       totalItems: 0,
       totalPages: 0,
@@ -153,4 +154,30 @@ export const useProduct = create((set, get) => ({
       }));
     }
   },
+  // fetchAllProducts : async() => {
+  //   try {
+  //     set((state) => ({
+  //       productState: { ...state.productState, loadingProduct: true },
+  //     }));
+  //     const response = await axiosInstance.get(`/trip/products/all`);
+  //     if (response.status === 200) {
+  //       const data = response.data;
+  //       console.log(response);
+        
+  //       set((state) => ({
+  //         productState: {
+  //           ...state.productState,
+  //           allProducts : data.data.products,
+  //           loadingProduct: false,
+  //         },
+  //       }));
+  //     }
+  //   } catch (error) {
+  //     ShowToast.error(error.response?.data?.msg || "Erreur lors de la récupération du produit.");
+  //   } finally {
+  //     set((state) => ({
+  //       productState: { ...state.productState, loadingProduct: false },
+  //     }));
+  //   }
+  // }
 }));

@@ -51,7 +51,7 @@ const ListeDesWastes = () => {
       ShowToast.error("Aucune liste de déchets à imprimer.");
       return;
     }
-    PrintWasteList(wastes);
+    PrintWasteList(wastes, products, filters);
   };
 
   const handleFilterInputChange = (e) => {

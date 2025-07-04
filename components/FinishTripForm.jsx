@@ -83,8 +83,8 @@ const FinishTripForm = ({
         return {
           box_id: boxId,
           designation,
-          qttIn: b.qttIn || 0,
-          qttOut: b.qttOut || 0, // Include for validation
+          qttIn: b.qttIn ,
+          qttOut: b.qttOut || 0 , // Include for validation
         };
       });
 
@@ -126,6 +126,8 @@ const FinishTripForm = ({
   };
 
   const addWaste = () => {
+    console.log("Adding waste entry");
+    
     setFormData({
       ...formData,
       tripWastes: [
@@ -266,7 +268,7 @@ const FinishTripForm = ({
                 <div>
                   <Label>Qté Retour (Caisses)</Label>
                   <Input
-                    type="number"
+                    type="text"
                     value={product.qttReutour}
                     onChange={(e) =>
                       handleChange(
@@ -283,7 +285,7 @@ const FinishTripForm = ({
                 <div>
                   <Label>Qté Retour (Unités)</Label>
                   <Input
-                    type="number"
+                    type="text"
                     value={product.qttReutourUnite}
                     onChange={(e) =>
                       handleChange(
@@ -319,7 +321,7 @@ const FinishTripForm = ({
               <div>
                 <Label>Qté Entrée</Label>
                 <Input
-                  type="number"
+                  type="text"
                   value={box.qttIn}
                   onChange={(e) =>
                     handleChange("tripBoxes", index, "qttIn", e.target.value)
@@ -357,18 +359,23 @@ const FinishTripForm = ({
               </div>
               <div>
                 <Label>Type</Label>
-                <Input
+                {/* <Input
                   value={waste.type}
                   onChange={(e) =>
                     handleChange("tripWastes", index, "type", e.target.value)
                   }
                   className="mt-1"
-                />
+                /> */}
+                <select className="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500" value={waste.type} onChange={(e) => handleChange("tripWastes", index, "type", e.target.value)}> 
+                  <option value="none">Selection le type</option>
+                  <option value="Change">Change</option>
+                  <option value="Défaut">Défaut</option>
+                </select>
               </div>
               <div>
                 <Label>Quantité</Label>
                 <Input
-                  type="number"
+                  type="text"
                   value={waste.qtt}
                   onChange={(e) =>
                     handleChange("tripWastes", index, "qtt", e.target.value)
@@ -416,7 +423,7 @@ const FinishTripForm = ({
               <div>
                 <Label>Montant (MAD)</Label>
                 <Input
-                  type="number"
+                  type="text"
                   value={charge.amount}
                   onChange={(e) =>
                     handleChange("tripCharges", index, "amount", e.target.value)
@@ -451,10 +458,10 @@ const FinishTripForm = ({
         <div>
           <Label>Montant Reçu (MAD)</Label>
           <Input
-            type="number"
+            type="text"
             value={formData.receivedAmount}
             onChange={(e) =>
-              setFormData({ ...formData, receivedAmount: e.target.value })
+              setFormData({ ...formData, receivedAmount: parseFloat(e.target.value) })
             }
             min="0"
             step="0.01"

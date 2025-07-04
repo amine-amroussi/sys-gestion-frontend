@@ -93,7 +93,7 @@ const StartTripForm = ({ open, onOpenChange, onTripStarted }) => {
             }));
 
           const remainingBoxes = tripBoxes
-            .filter((tb) => tb.qttIn > 0)
+            .filter((tb) => tb.qttIn >= 0)
             .map((tb) => ({
               box_id: tb.box.toString(),
               qttOut: tb.qttOut - tb.qttIn || 0,
@@ -735,7 +735,7 @@ const StartTripForm = ({ open, onOpenChange, onTripStarted }) => {
               <div className="w-20">
                 <Label className="text-sm font-medium">Caisses</Label>
                 <Input
-                  type="number"
+                  type="text"
                   value={newProduct.qttOut}
                   onChange={(e) =>
                     handleNewProductChange("qttOut", e.target.value)
@@ -748,7 +748,7 @@ const StartTripForm = ({ open, onOpenChange, onTripStarted }) => {
               <div className="w-20">
                 <Label className="text-sm font-medium">Unités</Label>
                 <Input
-                  type="number"
+                  type="text"
                   value={newProduct.qttOutUnite}
                   onChange={(e) =>
                     handleNewProductChange("qttOutUnite", e.target.value)
@@ -849,7 +849,7 @@ const StartTripForm = ({ open, onOpenChange, onTripStarted }) => {
               <div className="w-20">
                 <Label className="text-sm font-medium">Qté</Label>
                 <Input
-                  type="number"
+                  type="text"
                   value={newBox.qttOut}
                   onChange={(e) => handleNewBoxChange("qttOut", e.target.value)}
                   min="0"

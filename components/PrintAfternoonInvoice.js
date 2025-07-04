@@ -7,9 +7,6 @@ const PrintAfternoonInvoice = ({ invoiceData }) => {
     return;
   }
 
-  console.log("Invoice Data for Printing:", JSON.stringify(invoiceData, null, 2));
-
-  // Check for missing or invalid product data
   const hasInvalidProducts = invoiceData.products.some(
     (prod) =>
       !prod.designation ||
@@ -55,15 +52,10 @@ const PrintAfternoonInvoice = ({ invoiceData }) => {
           td:first-child { text-align: left; }
           .section { margin-bottom: 20px; }
           .totals { font-weight: bold; }
+          tfoot { font-weight: bold; }
         </style>
       </head>
       <body>
-        <h1>Entreprise Exemple</h1>
-        <p style="text-align: center;">
-          123 Rue Principale, Casablanca, Maroc<br>
-          Tél: +212 5 22 123 456 | Email: contact@exemple.com
-        </p>
-
         <div class="section">
           <h2>Détails de la Facture</h2>
           <p>N° Facture: ${invoiceData.tripId}</p>
@@ -157,7 +149,7 @@ const PrintAfternoonInvoice = ({ invoiceData }) => {
         </div>
 
         <div class="section">
-          <h3>Déchets</h3>
+          <h3>Déchets Défauts</h3>
           <table>
             <thead>
               <tr>
@@ -170,8 +162,9 @@ const PrintAfternoonInvoice = ({ invoiceData }) => {
             </thead>
             <tbody>
               ${
-                invoiceData.wastes?.length
+                invoiceData.wastes?.filter(waste => waste.type === "Défaut").length
                   ? invoiceData.wastes
+                      .filter(waste => waste.type === "Défaut")
                       .map(
                         (waste) => `
                           <tr>
@@ -179,13 +172,104 @@ const PrintAfternoonInvoice = ({ invoiceData }) => {
                             <td>${waste.qtt !== null ? waste.qtt : 0}</td>
                             <td>${waste.type || "N/A"}</td>
                             <td>${(waste.priceUnite !== null ? parseFloat(waste.priceUnite) : 0).toFixed(2)}</td>
-                            <td>${(waste.cost !== null ? waste.cost : 0).toFixed(2)}</td>
+                            <td>${(waste.cost !== null ? parseFloat(waste.cost) : 0).toFixed(2)}</td>
                           </tr>
                         `
                       )
                       .join("")
-                  : `<tr><td colspan="5">Aucun déchet disponible</td></tr>`
+                  : `<tr><td colspan="5">Aucun déchet de type Défaut disponible</td></tr>`
               }
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>Total Défauts</td>
+                <td>${
+                  invoiceData.wastes
+                    ?.filter(waste => waste.type === "Défaut")
+                    .reduce((sum, waste) => sum + (waste.qtt || 0), 0) || 0
+                }</td>
+                <td></td>
+                <td></td>
+                <td>${
+                  invoiceData.wastes
+                    ?.filter(waste => waste.type === "Défaut")
+                    .reduce((sum, waste) => sum + (parseFloat(waste.cost) || 0), 0)
+                    .toFixed(2) || 0
+                } MAD</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="section">
+          <h3>Déchets Changes</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Désignation</th>
+                <th>Quantité</th>
+                <th>Type</th>
+                <th>Prix Unitaire (MAD)</th>
+                <th>Coût Total (MAD)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${
+                invoiceData.wastes?.filter(waste => waste.type === "Change").length
+                  ? invoiceData.wastes
+                      .filter(waste => waste.type === "Change")
+                      .map(
+                        (waste) => `
+                          <tr>
+                            <td>${waste.product || "Inconnu"}</td>
+                            <td>${waste.qtt !== null ? waste.qtt : 0}</td>
+                            <td>${waste.type || "N/A"}</td>
+                            <td>${(waste.priceUnite !== null ? parseFloat(waste.priceUnite) : 0).toFixed(2)}</td>
+                            <td>${(waste.cost !== null ? parseFloat(waste.cost) : 0).toFixed(2)}</td>
+                          </tr>
+                        `
+                      )
+                      .join("")
+                  : `<tr><td colspan="5">Aucun déchet de type Change disponible</td></tr>`
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>Total Changes</td>
+                <td>${
+                  invoiceData.wastes
+                    ?.filter(waste => waste.type === "Change")
+                    .reduce((sum, waste) => sum + (waste.qtt || 0), 0) || 0
+                }</td>
+                <td></td>
+                <td></td>
+                <td>${
+                  invoiceData.wastes
+                    ?.filter(waste => waste.type === "Change")
+                    .reduce((sum, waste) => sum + (parseFloat(waste.cost) || 0), 0)
+                    .toFixed(2) || 0
+                } MAD</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="section">
+          <h3>Total Déchets</h3>
+          <table>
+            <tbody>
+              <tr>
+                <td>Total Déchets (Défauts + Changes)</td>
+                <td>${
+                  invoiceData.wastes
+                    ?.reduce((sum, waste) => sum + (waste.qtt || 0), 0) || 0
+                }</td>
+                <td>${
+                  invoiceData.wastes
+                    ?.reduce((sum, waste) => sum + (parseFloat(waste.cost) || 0), 0)
+                    .toFixed(2) || 0
+                } MAD</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -215,22 +299,27 @@ const PrintAfternoonInvoice = ({ invoiceData }) => {
                   : `<tr><td colspan="2">Aucune charge disponible</td></tr>`
               }
             </tbody>
+            <tfoot>
+              <tr>
+                <td>Total</td>
+                <td>${
+                  invoiceData.charges
+                    ?.reduce((sum, charge) => sum + (parseFloat(charge.amount) || 0), 0)
+                    .toFixed(2) || 0
+                } MAD</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
         <div class="section totals">
-          <p>Montant Total Produits: ${(parseFloat(totalAmount) || 0).toFixed(2)} MAD</p>
-          <p>Montant Attendu: ${(parseFloat(invoiceData.totals?.waitedAmount )|| 0).toFixed(2)} MAD</p>
-          <p>Montant Reçu: ${(parseFloat(invoiceData.totals?.receivedAmount )|| 0).toFixed(2)} MAD</p>
-          <p>Différence: ${(parseFloat(invoiceData.totals?.deff )|| 0).toFixed(2)} MAD</p>
+          <p>Montant Attendu: ${(parseFloat(invoiceData.totals?.waitedAmount) || 0).toFixed(2) - parseFloat(invoiceData.totals?.tripCharges || 0).toFixed(2) - parseFloat(invoiceData.totals?.totalWasteCost || 0).toFixed(2)} MAD</p>
+          <p>Montant Reçu: ${(parseFloat(invoiceData.totals?.receivedAmount) || 0).toFixed(2)} MAD</p>
+          <p>La Commaission : ${(parseFloat(invoiceData.totals?.waitedAmount) * 0.008 || 0).toFixed(2)} MAD</p>
+          <p>Différence: ${(parseFloat(invoiceData.totals?.deff) || 0).toFixed(2)} MAD</p>
           <p>Total Charges: ${(parseFloat(invoiceData.totals?.tripCharges) || 0).toFixed(2)} MAD</p>
-          <p>Coût Total Déchets: ${(parseFloat(invoiceData.totals?.wastesCost) || 0).toFixed(2)} MAD</p>
+          <p>Coût Total Déchets: ${(parseFloat(invoiceData.totals?.totalWasteCost) || 0).toFixed(2)} MAD</p>
         </div>
-
-        <p style="text-align: center;">
-          Merci pour votre confiance !<br>
-          © ${new Date().getFullYear()} Entreprise Exemple
-        </p>
       </body>
     </html>
   `;

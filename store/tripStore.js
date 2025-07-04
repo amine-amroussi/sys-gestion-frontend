@@ -316,4 +316,15 @@ fetchLastTripByMatricule : async (matricule) => {
       toast.error(errorMessage);
     }
   },
+  fetchAllProduct : async() => {
+    try {
+      
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "Erreur lors du changement de page.";
+      set((state) => ({
+        tripState: { ...state.tripState, error: errorMessage }
+      }));
+      toast.error(errorMessage);
+    }
+  } 
 }));  

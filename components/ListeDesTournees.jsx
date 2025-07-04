@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { axiosInstance } from "@/utils/axiosInstance";
 import PrintAfternoonInvoice from "@/components/PrintAfternoonInvoice";
+import { useProduct } from "@/store/productStore";
 
 const ListeDesTournees = () => {
   const {
@@ -24,6 +25,8 @@ const ListeDesTournees = () => {
     finishTrip,
     emptyTruck,
   } = useTrip();
+
+  const { fetchAllProducts, allProducts } = useProduct();
 
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,6 +46,10 @@ const ListeDesTournees = () => {
     sortOrder: "DESC",
     pageSize: 10,
   });
+
+  useEffect(() => {
+    fetchAllProducts();
+  }, []);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -133,13 +140,11 @@ const ListeDesTournees = () => {
           const lastTripResponse = await axiosInstance.get(
             `/trip/last/${trip.TruckAssociation.matricule}`
           );
-          console.log("Last trip response:", lastTripResponse.data);
           setLastTripDetails(lastTripResponse.data || null);
 
           const previousTripResponse = await axiosInstance.get(
             `/trip/previous/${parsedTripId}`
           );
-          console.log("Previous trip response:", previousTripResponse.data);
           setPreviousTripDetails(
             previousTripResponse.data.previousTrip || null
           );
@@ -154,7 +159,6 @@ const ListeDesTournees = () => {
       } else {
         setLastTripDetails(null);
         setPreviousTripDetails(null);
-        console.log("No truck matricule, skipping last/previous trip fetch.");
       }
 
       if (!trip.isActive) {
@@ -165,25 +169,32 @@ const ListeDesTournees = () => {
           seller: trip.SellerAssociation?.name || "N/A",
           date: trip.date,
           zone: trip.zone,
-          products: combineProducts(trip.TripProducts, previousTripDetails?.TripProducts) || [],
-          boxes: combineBoxes(trip.TripBoxes, previousTripDetails?.TripBoxes) || [],
-          wastes: trip.TripWastes?.map((w) => ({
-            product:
-              w.WasteAssociation?.ProductAssociation?.designation ||
-              w.product ||
-              "Inconnu",
-            type: w.type || "N/A",
-            qtt: w.qtt || 0,
-            priceUnite:
-              w.WasteAssociation?.ProductAssociation?.priceUnite || 0,
-            cost:
-              (w.qtt || 0) *
-              (w.WasteAssociation?.ProductAssociation?.priceUnite || 0),
-          })) || [],
-          charges: trip.TripCharges?.map((c) => ({
-            type: c.ChargeAssociation?.type || "N/A",
-            amount: c.amount || 0,
-          })) || [],
+          products:
+            combineProducts(
+              trip.TripProducts,
+              previousTripDetails?.TripProducts
+            ) || [],
+          boxes:
+            combineBoxes(trip.TripBoxes, previousTripDetails?.TripBoxes) || [],
+          wastes:
+            trip.TripWastes?.map((w) => ({
+              product:
+                w.WasteAssociation?.ProductAssociation?.designation ||
+                w.product ||
+                "Inconnu",
+              type: w.type || "N/A",
+              qtt: w.qtt || 0,
+              priceUnite:
+                w.WasteAssociation?.ProductAssociation?.priceUnite || 0,
+              cost:
+                (w.qtt || 0) *
+                (w.WasteAssociation?.ProductAssociation?.priceUnite || 0),
+            })) || [],
+          charges:
+            trip.TripCharges?.map((c) => ({
+              type: c.ChargeAssociation?.type || "N/A",
+              amount: c.amount || 0,
+            })) || [],
           totals: {
             waitedAmount: trip.waitedAmount || 0,
             receivedAmount: trip.receivedAmount || 0,
@@ -268,9 +279,9 @@ const ListeDesTournees = () => {
   const combineProducts = (selectedProducts = [], previousProducts = []) => {
     const productMap = new Map();
 
-    // Process previous trip products for remaining quantities
     previousProducts.forEach((p) => {
-      const designation = p.ProductAssociation?.designation || `Produit ${p.product}`;
+      const designation =
+        p.ProductAssociation?.designation || `Produit ${p.product}`;
       productMap.set(p.product, {
         product_id: p.product,
         designation,
@@ -287,9 +298,9 @@ const ListeDesTournees = () => {
       });
     });
 
-    // Process selected trip products
     selectedProducts.forEach((p) => {
-      const designation = p.ProductAssociation?.designation || `Produit ${p.product}`;
+      const designation =
+        p.ProductAssociation?.designation || `Produit ${p.product}`;
       const existing = productMap.get(p.product) || {
         product_id: p.product,
         designation,
@@ -321,7 +332,8 @@ const ListeDesTournees = () => {
         qttReutour: p.qttReutour || 0,
         qttReutourUnite: p.qttReutourUnite || 0,
         qttVendu: p.qttVendu || totalUnitsOut - totalUnitsReturned,
-        priceUnite: p.ProductAssociation?.priceUnite || existing.priceUnite || 0,
+        priceUnite:
+          p.ProductAssociation?.priceUnite || existing.priceUnite || 0,
         totalUnitsOut,
         totalUnitsReturned,
       });
@@ -329,8 +341,10 @@ const ListeDesTournees = () => {
 
     return Array.from(productMap.values()).map((item) => ({
       ...item,
-      sortieTotalCaisses: (item.qttRestanteCaisses || 0) + (item.newQttOut || 0),
-      sortieTotalUnites: (item.qttRestanteUnites || 0) + (item.newQttOutUnite || 0),
+      sortieTotalCaisses:
+        (item.qttRestanteCaisses || 0) + (item.newQttOut || 0),
+      sortieTotalUnites:
+        (item.qttRestanteUnites || 0) + (item.newQttOutUnite || 0),
       totalRevenue: (item.qttVendu || 0) * (item.priceUnite || 0),
     }));
   };
@@ -338,7 +352,6 @@ const ListeDesTournees = () => {
   const combineBoxes = (selectedBoxes = [], previousBoxes = []) => {
     const boxMap = new Map();
 
-    // Process previous trip boxes
     previousBoxes.forEach((b) => {
       const designation = b.BoxAssociation?.designation || `Boîte ${b.box}`;
       boxMap.set(b.box, {
@@ -350,7 +363,6 @@ const ListeDesTournees = () => {
       });
     });
 
-    // Process selected trip boxes
     selectedBoxes.forEach((b) => {
       const designation = b.BoxAssociation?.designation || `Boîte ${b.box}`;
       const existing = boxMap.get(b.box) || {
@@ -731,44 +743,50 @@ const ListeDesTournees = () => {
                       {combineProducts(
                         selectedTrip.TripProducts,
                         previousTripDetails?.TripProducts
-                      ).map((item, index) => (
-                        <tr key={`product-${index}`} className="border-b">
-                          <td className="p-2">{item.designation}</td>
-                          <td className="p-2 text-right">
-                            {item.qttRestanteCaisses}
-                          </td>
-                          <td className="p-2 text-right">
-                            {item.qttRestanteUnites}
-                          </td>
-                          <td className="p-2 text-right">
-                            {item.newQttOut}
-                          </td>
-                          <td className="p-2 text-right">
-                            {item.newQttOutUnite}
-                          </td>
-                          <td className="p-2 text-right">
-                            {item.sortieTotalCaisses}
-                          </td>
-                          <td className="p-2 text-right">
-                            {item.sortieTotalUnites}
-                          </td>
-                          <td className="p-2 text-right">
-                            {item.qttReutour}
-                          </td>
-                          <td className="p-2 text-right">
-                            {item.qttReutourUnite}
-                          </td>
-                          <td className="p-2 text-right">
-                            {item.qttVendu}
-                          </td>
-                          <td className="p-2 text-right">
-                            {item.priceUnite}
-                          </td>
-                          <td className="p-2 text-right">
-                            {parseFloat(item.totalRevenue).toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
+                      ).map(
+                        (item, index) =>
+                          (item.qttRestanteCaisses !== 0 ||
+                            item.qttRestanteUnites !== 0 ||
+                            item.newQttOut !== 0 ||
+                            item.newQttOutUnite !== 0) && (
+                            <tr key={`product-${index}`} className="border-b">
+                              <td className="p-2">{item.designation}</td>
+                              <td className="p-2 text-right">
+                                {item.qttRestanteCaisses}
+                              </td>
+                              <td className="p-2 text-right">
+                                {item.qttRestanteUnites}
+                              </td>
+                              <td className="p-2 text-right">
+                                {item.newQttOut}
+                              </td>
+                              <td className="p-2 text-right">
+                                {item.newQttOutUnite}
+                              </td>
+                              <td className="p-2 text-right">
+                                {item.sortieTotalCaisses}
+                              </td>
+                              <td className="p-2 text-right">
+                                {item.sortieTotalUnites}
+                              </td>
+                              <td className="p-2 text-right">
+                                {item.qttReutour}
+                              </td>
+                              <td className="p-2 text-right">
+                                {item.qttReutourUnite}
+                              </td>
+                              <td className="p-2 text-right">
+                                {item.qttVendu}
+                              </td>
+                              <td className="p-2 text-right">
+                                {item.priceUnite}
+                              </td>
+                              <td className="p-2 text-right">
+                                {parseFloat(item.totalRevenue).toFixed(2)}
+                              </td>
+                            </tr>
+                          )
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -808,10 +826,12 @@ const ListeDesTournees = () => {
                           <td className="p-2 text-right">
                             {item.previousRemaining}
                           </td>
-                          <td className="p-2 text-right">{item.qttOut}</td>
+                          <td className="p-2 text-right">
+                            {item.qttOut }
+                          </td>
                           <td className="p-2 text-right">{item.qttIn}</td>
                           <td className="p-2 text-right">
-                            {item.qttOut - item.qttIn}
+                            {item.qttOut- item.qttIn}
                           </td>
                         </tr>
                       ))}
@@ -828,8 +848,12 @@ const ListeDesTournees = () => {
             {!selectedTrip.isActive && invoiceData && (
               <>
                 <div className="mt-6">
-                  <h4 className="text-lg font-semibold mb-2">Déchets</h4>
-                  {invoiceData.wastes?.length > 0 ? (
+                  <h4 className="text-lg font-semibold mb-2">
+                    Déchets Défauts
+                  </h4>
+                  {invoiceData.wastes?.filter(
+                    (waste) => waste.type === "Défaut"
+                  ).length > 0 ? (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm border-collapse">
                         <thead className="bg-gray-100">
@@ -844,17 +868,159 @@ const ListeDesTournees = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {invoiceData.wastes.map((waste, index) => (
-                            <tr key={`waste-${index}`} className="border-b">
-                              <td className="p-2">{waste.product}</td>
-                              <td className="p-2 text-right">{waste.type}</td>
-                              <td className="p-2 text-right">{waste.qtt}</td>
-                              <td className="p-2 text-right">
-                                {waste.priceUnite}
-                              </td>
-                              <td className="p-2 text-right">{waste.cost}</td>
-                            </tr>
-                          ))}
+                          {invoiceData.wastes
+                            .filter((waste) => waste.type === "Défaut")
+                            .map((waste, index) => (
+                              <tr
+                                key={`waste-defaut-${index}`}
+                                className="border-b"
+                              >
+                                <td className="p-2">{waste.product}</td>
+                                <td className="p-2 text-right">{waste.type}</td>
+                                <td className="p-2 text-right">{waste.qtt}</td>
+                                <td className="p-2 text-right">
+                                  {parseFloat(waste.priceUnite).toFixed(2)}
+                                </td>
+                                <td className="p-2 text-right">
+                                  {parseFloat(waste.cost).toFixed(2)}
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="border-t font-semibold">
+                            <td className="p-2">Total Défauts</td>
+                            <td className="p-2"></td>
+                            <td className="p-2 text-right">
+                              {invoiceData.wastes
+                                .filter((waste) => waste.type === "Défaut")
+                                .reduce(
+                                  (sum, waste) => sum + (waste.qtt || 0),
+                                  0
+                                )}
+                            </td>
+                            <td className="p-2"></td>
+                            <td className="p-2 text-right">
+                              {invoiceData.wastes
+                                .filter((waste) => waste.type === "Défaut")
+                                .reduce(
+                                  (sum, waste) => sum + (waste.cost || 0),
+                                  0
+                                )
+                                .toFixed(2)}{" "}
+                              MAD
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600">
+                      Aucun déchet de type Défaut trouvé pour cette tournée.
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-6">
+                  <h4 className="text-lg font-semibold mb-2">
+                    Déchets Changes
+                  </h4>
+                  {invoiceData.wastes?.filter(
+                    (waste) => waste.type === "Change"
+                  ).length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm border-collapse">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th className="p-2 text-left">Produit</th>
+                            <th className="p-2 text-right">Type</th>
+                            <th className="p-2 text-right">Quantité</th>
+                            <th className="p-2 text-right">
+                              Prix Unitaire (MAD)
+                            </th>
+                            <th className="p-2 text-right">Coût Total (MAD)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {invoiceData.wastes
+                            .filter((waste) => waste.type === "Change")
+                            .map((waste, index) => (
+                              <tr
+                                key={`waste-change-${index}`}
+                                className="border-b"
+                              >
+                                <td className="p-2">{waste.product}</td>
+                                <td className="p-2 text-right">{waste.type}</td>
+                                <td className="p-2 text-right">{waste.qtt}</td>
+                                <td className="p-2 text-right">
+                                  {parseFloat(waste.priceUnite).toFixed(2)}
+                                </td>
+                                <td className="p-2 text-right">
+                                  {parseFloat(waste.cost).toFixed(2)}
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="border-t font-semibold">
+                            <td className="p-2">Total Changes</td>
+                            <td className="p-2"></td>
+                            <td className="p-2 text-right">
+                              {invoiceData.wastes
+                                .filter((waste) => waste.type === "Change")
+                                .reduce(
+                                  (sum, waste) => sum + (waste.qtt || 0),
+                                  0
+                                )}
+                            </td>
+                            <td className="p-2"></td>
+                            <td className="p-2 text-right">
+                              {invoiceData.wastes
+                                .filter((waste) => waste.type === "Change")
+                                .reduce(
+                                  (sum, waste) => sum + (waste.cost || 0),
+                                  0
+                                )
+                                .toFixed(2)}{" "}
+                              MAD
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600">
+                      Aucun déchet de type Change trouvé pour cette tournée.
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-6">
+                  <h4 className="text-lg font-semibold mb-2">Total Déchets</h4>
+                  {invoiceData.wastes?.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm border-collapse">
+                        <tbody>
+                          <tr className="border-b font-semibold">
+                            <td className="p-2">
+                              Total Déchets (Défauts + Changes)
+                            </td>
+                            <td className="p-2 text-right">
+                              {invoiceData.wastes.reduce(
+                                (sum, waste) => sum + (waste.qtt || 0),
+                                0
+                              )}
+                            </td>
+                            <td className="p-2 text-right">
+                              {invoiceData.wastes
+                                .reduce(
+                                  (sum, waste) => sum + (waste.cost || 0),
+                                  0
+                                )
+                                .toFixed(2)}{" "}
+                              MAD
+                            </td>
+                          </tr>
                         </tbody>
                       </table>
                     </div>
@@ -881,11 +1047,26 @@ const ListeDesTournees = () => {
                             <tr key={`charge-${index}`} className="border-b">
                               <td className="p-2">{charge.type}</td>
                               <td className="p-2 text-right">
-                                {charge.amount}
+                                {parseFloat(charge.amount).toFixed(2)}
                               </td>
                             </tr>
                           ))}
                         </tbody>
+                        <tfoot>
+                          <tr className="border-t font-semibold">
+                            <td className="p-2">Total</td>
+                            <td className="p-2 text-right">
+                              {invoiceData.charges
+                                .reduce(
+                                  (sum, charge) =>
+                                    sum + (parseFloat(charge.amount) || 0),
+                                  0
+                                )
+                                .toFixed(2)}{" "}
+                              MAD
+                            </td>
+                          </tr>
+                        </tfoot>
                       </table>
                     </div>
                   ) : (
@@ -900,25 +1081,55 @@ const ListeDesTournees = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <p className="font-medium">Montant Attendu:</p>
-                      <p>{invoiceData.totals?.waitedAmount || 0} MAD</p>
+                      <p>
+                        {parseFloat(
+                          invoiceData.totals?.waitedAmount || 0
+                        ).toFixed(2)}{" "}
+                        MAD
+                      </p>
                     </div>
                     <div>
                       <p className="font-medium">Montant Reçu:</p>
-                      <p>{invoiceData.totals?.receivedAmount || 0} MAD</p>
+                      <p>
+                        {parseFloat(
+                          invoiceData.totals?.receivedAmount || 0
+                        ).toFixed(2)}{" "}
+                        MAD
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Commaission:</p>
+                      <p>
+                        {parseFloat(
+                          invoiceData.totals?.waitedAmount * 0.008 || 0
+                        ).toFixed(2)}{" "}
+                        MAD
+                      </p>
                     </div>
                     <div>
                       <p className="font-medium">Différence:</p>
-                      <p>{invoiceData.totals?.deff || 0} MAD</p>
+                      <p>
+                        {parseFloat(invoiceData.totals?.deff || 0).toFixed(2)}{" "}
+                        MAD
+                      </p>
                     </div>
                     <div>
                       <p className="font-medium">Total Charges:</p>
                       <p>
-                        {parseFloat(invoiceData.totals?.tripCharges) || 0} MAD
+                        {parseFloat(
+                          invoiceData.totals?.tripCharges || 0
+                        ).toFixed(2)}{" "}
+                        MAD
                       </p>
                     </div>
                     <div>
                       <p className="font-medium">Coût Total Déchets:</p>
-                      <p>{parseFloat(invoiceData.totals?.totalWasteCost) || 0} MAD</p>
+                      <p>
+                        {parseFloat(
+                          invoiceData.totals?.totalWasteCost || 0
+                        ).toFixed(2)}{" "}
+                        MAD
+                      </p>
                     </div>
                   </div>
                 </div>

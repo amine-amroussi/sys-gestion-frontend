@@ -12,12 +12,7 @@ const Fournisseur = () => {
         {/* <AddSupplierSheet open={open} setOpen={setOpen} /> */}
       <h1 className="text-xl font-bold capitalize">Gestion des feurnisseurs</h1>
       <div className="my-5 w-full flex items-center justify-between ">
-        <Input
-          className={"w-64 bg-gray-100"}
-          name="search"
-          type="search"
-          placeholder="Rechercher un fournisseur"
-        />
+       
         {/* <Button className="cursor-pointer" onClick={() => setOpen(true)}>
           Ajouter un fournisseur
         </Button> */}
