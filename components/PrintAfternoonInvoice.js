@@ -313,13 +313,14 @@ const PrintAfternoonInvoice = ({ invoiceData }) => {
         </div>
 
         <div class="section totals">
-          <p>Montant Attendu: ${(parseFloat(invoiceData.totals?.waitedAmount) || 0).toFixed(2) - parseFloat(invoiceData.totals?.tripCharges || 0).toFixed(2) - parseFloat(invoiceData.totals?.totalWasteCost || 0).toFixed(2)} MAD</p>
+          <p>Montant Attendu: ${((parseFloat(invoiceData.totals?.waitedAmount) || 0).toFixed(2) - parseFloat(invoiceData.totals?.tripCharges || 0).toFixed(2) - parseFloat(invoiceData.totals?.totalWasteCost || 0).toFixed(2)).toFixed(2)} MAD</p>
           <p>Montant Reçu: ${(parseFloat(invoiceData.totals?.receivedAmount) || 0).toFixed(2)} MAD</p>
           <p>La Commaission : ${(parseFloat(invoiceData.totals?.waitedAmount) * 0.008 || 0).toFixed(2)} MAD</p>
           <p>Différence: ${(parseFloat(invoiceData.totals?.deff) || 0).toFixed(2)} MAD</p>
           <p>Total Charges: ${(parseFloat(invoiceData.totals?.tripCharges) || 0).toFixed(2)} MAD</p>
           <p>Coût Total Déchets: ${(parseFloat(invoiceData.totals?.totalWasteCost) || 0).toFixed(2)} MAD</p>
         </div>
+
       </body>
     </html>
   `;
