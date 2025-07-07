@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { toast } from "sonner";
 import { axiosInstance } from "@/utils/axiosInstance";
 import PrintAfternoonInvoice from "@/components/PrintAfternoonInvoice";
@@ -63,7 +63,6 @@ const ListeDesTournees = () => {
           sortOrder: filters.sortOrder,
         });
       } catch (error) {
-        console.error("Error fetching initial data:", error);
         toast.error("Erreur lors de la récupération des données initiales.");
       }
     };
@@ -86,7 +85,6 @@ const ListeDesTournees = () => {
       };
       await fetchAllTrips(page, queryParams);
     } catch (error) {
-      console.error("Error fetching trips:", error);
       toast.error("Erreur lors de l'application des filtres.");
     }
   };
@@ -132,6 +130,8 @@ const ListeDesTournees = () => {
       setInvoiceData(null);
 
       const trip = await fetchTripById(parsedTripId);
+      console.log(trip);
+
       setSelectedTrip(trip);
       setIsModalOpen(true);
 
@@ -149,7 +149,6 @@ const ListeDesTournees = () => {
             previousTripResponse.data.previousTrip || null
           );
         } catch (fetchError) {
-          console.error("Error fetching trip details:", fetchError);
           setLastTripDetails(null);
           setPreviousTripDetails(null);
           toast.error(
@@ -214,8 +213,9 @@ const ListeDesTournees = () => {
           },
         });
       }
+
+      console.log("Selected trip details:", trip);
     } catch (error) {
-      console.error("Error fetching trip:", error);
       toast.error("Erreur lors de la récupération des détails de la tournée.");
       setSelectedTrip(null);
       setIsModalOpen(false);
@@ -233,13 +233,13 @@ const ListeDesTournees = () => {
         tripProducts:
           lastTripDetails.tripProducts?.map((product) => ({
             product_id: product.product,
-            qttReutour: product.qttOut || 0,
-            qttReutourUnite: product.qttOutUnite || 0,
+            qttReutour: product.qttReutour || 0,
+            qttReutourUnite: product.qttReutourUnite || 0,
           })) || [],
         tripBoxes:
           lastTripDetails.tripBoxes?.map((box) => ({
             box_id: box.box,
-            qttIn: box.qttOut || 0,
+            qttIn: box.qttIn || 0,
           })) || [],
         tripWastes: [],
         tripCharges: [],
@@ -254,7 +254,6 @@ const ListeDesTournees = () => {
       await fetchTripsWithFilters(pagination.currentPage);
       toast.success("Camion vidé avec succès !");
     } catch (error) {
-      console.error("Error emptying truck:", error);
       toast.error("Erreur lors du vidage du camion.");
     }
   };
@@ -268,10 +267,12 @@ const ListeDesTournees = () => {
       await emptyTruck(selectedMatricule);
       setSelectedMatricule("");
       setPreviousTripDetails(null);
+      setLastTripDetails(null); // Reset last trip details to ensure UI reflects updated state
       await fetchTripsWithFilters(pagination.currentPage);
-      toast.success("Camion vidé avec succès !");
+      toast.success(
+        "Camion vidé avec succès ! Produits et caisses retournés au stock."
+      );
     } catch (error) {
-      console.error("Error emptying truck by matricule:", error);
       toast.error("Erreur lors du vidage du camion.");
     }
   };
@@ -826,12 +827,10 @@ const ListeDesTournees = () => {
                           <td className="p-2 text-right">
                             {item.previousRemaining}
                           </td>
-                          <td className="p-2 text-right">
-                            {item.qttOut }
-                          </td>
+                          <td className="p-2 text-right">{item.qttOut}</td>
                           <td className="p-2 text-right">{item.qttIn}</td>
                           <td className="p-2 text-right">
-                            {item.qttOut- item.qttIn}
+                            {item.previousRemaining + item.qttOut - item.qttIn}
                           </td>
                         </tr>
                       ))}
@@ -1084,7 +1083,13 @@ const ListeDesTournees = () => {
                       <p>
                         {parseFloat(
                           invoiceData.totals?.waitedAmount || 0
-                        ).toFixed(2)}{" "}
+                        ).toFixed(2) -
+                          parseFloat(
+                            invoiceData.totals?.tripCharges || 0
+                          ).toFixed(2) -
+                          parseFloat(
+                            invoiceData.totals?.totalWasteCost || 0
+                          ).toFixed(2)}{" "}
                         MAD
                       </p>
                     </div>
@@ -1098,7 +1103,7 @@ const ListeDesTournees = () => {
                       </p>
                     </div>
                     <div>
-                      <p className="font-medium">Commaission:</p>
+                      <p className="font-medium">Commission:</p>
                       <p>
                         {parseFloat(
                           invoiceData.totals?.waitedAmount * 0.008 || 0

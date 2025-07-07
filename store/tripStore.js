@@ -98,13 +98,10 @@ export const useTrip = create((set, get) => ({
   fetchTripById: async (tripId) => {
   try {
     const parsedTripId = parseInt(tripId, 10);
-    console.log("Fetching trip by ID:", parsedTripId);
     if (isNaN(parsedTripId)) {
       throw new Error("ID de tournée invalide");
     }
-    console.log(`Requesting /trip/${parsedTripId}`);
     const response = await axiosInstance.get(`/trip/${parsedTripId}`);
-    console.log("fetchTripById response:", JSON.stringify(response.data.trip, null, 2));
     if (!response.data.trip) {
       throw new Error("No trip data returned in response");
     }
@@ -146,7 +143,7 @@ fetchLastTripByMatricule : async (matricule) => {
 
   startTrip: async (tripData) => {
     try {
-      console.log("Sending startTrip request with data:", tripData);
+
       set((state) => ({
         tripState: { ...state.tripState, loadingTrip: true, error: null },
       }));

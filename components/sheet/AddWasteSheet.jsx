@@ -64,47 +64,51 @@ const AddWasteSheet = ({ open, setOpen, onWasteAdded }) => {
     setFormErrors({ ...formErrors, product: "" });
   };
 
- const validateForm = () => {
-  const errors = {};
-  if (!formData.product) {
-    errors.product = "Produit requis";
-    ShowToast.errorValidation("Produit", "Veuillez sélectionner un produit.");
-  }
-  if (!formData.qtt || formData.qtt <= 0 || isNaN(formData.qtt)) {
-    errors.qtt = "Quantité positive requise";
-    ShowToast.errorValidation("Quantité", "Veuillez entrer une quantité positive.");
-  }
-  if (!formData.type) {
-    errors.type = "Type requis";
-    ShowToast.errorValidation("Type", "Veuillez entrer un type de déchet.");
-  }
-  setFormErrors(errors);
-  return Object.keys(errors).length === 0;
-};
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.product) {
+      errors.product = "Produit requis";
+      ShowToast.errorValidation("Produit", "Veuillez sélectionner un produit.");
+    }
+    if (!formData.qtt || formData.qtt <= 0 || isNaN(formData.qtt)) {
+      errors.qtt = "Quantité positive requise";
+      ShowToast.errorValidation(
+        "Quantité",
+        "Veuillez entrer une quantité positive."
+      );
+    }
+    if (!formData.type) {
+      errors.type = "Type requis";
+      ShowToast.errorValidation("Type", "Veuillez entrer un type de déchet.");
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!validateForm()) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
-  const toastId = ShowToast.loading("Ajout du déchet...");
-  try {
-    // Ensure qtt is a number before sending
-    const wasteInfo = {
-      ...formData,
-      qtt: parseFloat(formData.qtt), // Ensure qtt is a number
-    };
-    await createWaste(wasteInfo);
-    setFormData({ product: "", qtt: "", type: "" });
-    setOpen(false);
-    if (onWasteAdded) onWasteAdded();
-    fetchWastes();
-    ShowToast.dismiss(toastId);
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || "Erreur lors de l'ajout du déchet.";
-    ShowToast.dismiss(toastId);
-    ShowToast.error(errorMessage);
-  }
-};
+    const toastId = ShowToast.loading("Ajout du déchet...");
+    try {
+      // Ensure qtt is a number before sending
+      const wasteInfo = {
+        ...formData,
+        qtt: parseFloat(formData.qtt), // Ensure qtt is a number
+      };
+      await createWaste(wasteInfo);
+      setFormData({ product: "", qtt: "", type: "" });
+      setOpen(false);
+      if (onWasteAdded) onWasteAdded();
+      fetchWastes();
+      ShowToast.dismiss(toastId);
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || "Erreur lors de l'ajout du déchet.";
+      ShowToast.dismiss(toastId);
+      ShowToast.error(errorMessage);
+    }
+  };
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -168,7 +172,7 @@ const handleSubmit = async (e) => {
           </div>
           <div className="flex flex-col gap-2 px-4">
             <Label htmlFor="type">Type</Label>
-            <Input
+            {/* <Input
               id="type"
               type="text"
               placeholder="Entrez le type (ex: Damaged)"
@@ -176,7 +180,21 @@ const handleSubmit = async (e) => {
               value={formData.type}
               onChange={handleChange}
               disabled={loadingProduct}
-            />
+            /> */}
+            <select
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+              id="type"
+              type="text"
+              placeholder="Entrez le type (ex: Damaged)"
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              disabled={loadingProduct}
+            >
+              <option value="none">Selection le type</option>
+              <option value="Change">Change</option>
+              <option value="Défaut">Défaut</option>
+            </select>
             {formErrors.type && (
               <p className="text-red-500 text-xs mt-1">{formErrors.type}</p>
             )}

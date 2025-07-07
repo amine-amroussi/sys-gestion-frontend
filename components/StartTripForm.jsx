@@ -78,7 +78,8 @@ const StartTripForm = ({ open, onOpenChange, onTripStarted }) => {
             `/trip/last/${formData.truck_matricule}`
           );
           const tripProducts = response.data.tripProducts || [];
-          const tripBoxes = response.data.tripBoxes || [];
+          let tripBoxes = response.data.tripBoxes || [];
+          
 
           // This is the main remaining Product Array
           const remainingProducts = tripProducts
@@ -91,6 +92,12 @@ const StartTripForm = ({ open, onOpenChange, onTripStarted }) => {
               newQttOutUnite: 0,
               isRemaining: true,
             }));
+
+           console.log("tripBoxe");
+          
+           tripBoxes = tripBoxes.filter((tb) => tb.qttIn > 0 && tb.qttOut > 0);
+           
+           
 
           const remainingBoxes = tripBoxes
             .filter((tb) => tb.qttIn >= 0)
@@ -221,6 +228,7 @@ const StartTripForm = ({ open, onOpenChange, onTripStarted }) => {
   };
 
   const addBox = () => {
+
     if (!newBox.box_id) {
       setFormErrors({ ...formErrors, new_box_id: "Boîte requise" });
       return;
